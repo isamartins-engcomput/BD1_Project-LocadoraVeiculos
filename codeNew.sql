@@ -1,5 +1,28 @@
-CREATE DATABASE locadora_veiculos;
+-- =========================================================
+-- 1. LIMPEZA PREVENTIVA (Permite re-executar sem erros)
+-- =========================================================
+DROP TABLE IF EXISTS public.locacao CASCADE;
+DROP TABLE IF EXISTS public.veiculo CASCADE;
+DROP TABLE IF EXISTS public.tipo_de_propulsao CASCADE;
+DROP TABLE IF EXISTS public.cor CASCADE;
+DROP TABLE IF EXISTS public.modelo CASCADE;
+DROP TABLE IF EXISTS public.fabricante CASCADE;
+DROP TABLE IF EXISTS public.gerente CASCADE;
+DROP TABLE IF EXISTS public.vendedor CASCADE;
+DROP TABLE IF EXISTS public.funcionario CASCADE;
+DROP TABLE IF EXISTS public.setor CASCADE;
+DROP TABLE IF EXISTS public.locadora CASCADE;
+DROP TABLE IF EXISTS public.proprietario CASCADE;
+DROP TABLE IF EXISTS public.cliente_autorizado CASCADE;
+DROP TABLE IF EXISTS public.cliente CASCADE;
+DROP TABLE IF EXISTS public.organizacao CASCADE;
+DROP TABLE IF EXISTS public.individuo CASCADE;
+DROP TABLE IF EXISTS public.pessoa CASCADE;
+DROP TABLE IF EXISTS public.cidade CASCADE;
 
+-- =========================================================
+-- 2. CRIAÇÃO DAS TABELAS E RESTRIÇÕES (DDL)
+-- =========================================================
 CREATE TABLE public.cidade (
 	id_cidade SERIAL NOT NULL,
 	nome VARCHAR(100) NOT NULL,
@@ -69,7 +92,7 @@ CREATE TABLE public.funcionario (
 	id_pessoa INTEGER NOT NULL,
 	matricula VARCHAR(20) NOT NULL,
 	data_admissao DATE NOT NULL,
-	salario_base NUMERIC(10,2) NOT NULL,
+	salario_base NUMERIC(10,2) NOT NULL CHECK (salario_base &gt; 0),
 	id_locadora INTEGER NOT NULL,
 	CONSTRAINT funcionario_pkey PRIMARY KEY (id_pessoa),
 	CONSTRAINT funcionario_matricula_key UNIQUE (matricula)
@@ -77,7 +100,7 @@ CREATE TABLE public.funcionario (
 
 CREATE TABLE public.vendedor (
 	id_pessoa INTEGER NOT NULL,
-	percentual_comissao NUMERIC(5,2) NOT NULL,
+	percentual_comissao NUMERIC(5,2) NOT NULL CHECK (percentual_comissao &gt;= 0),
 	CONSTRAINT vendedor_pkey PRIMARY KEY (id_pessoa)
 );
 
@@ -134,11 +157,11 @@ CREATE TABLE public.tipo_de_propulsao (
 CREATE TABLE public.veiculo (
 	placa VARCHAR(7) NOT NULL,
 	chassi VARCHAR(17) NOT NULL,
-	preco_venda NUMERIC(10,2) NOT NULL,
-	valor_diaria NUMERIC(8,2) NOT NULL,
+	preco_venda NUMERIC(10,2) NOT NULL CHECK (preco_venda &gt; 0),
+	valor_diaria NUMERIC(8,2) NOT NULL CHECK (valor_diaria &gt; 0),
 	condicao VARCHAR(30) NOT NULL,
 	ano_fabricacao INTEGER NOT NULL,
-	quilometragem_atual INTEGER NOT NULL,
+	quilometragem_atual INTEGER NOT NULL CHECK (quilometragem_atual &gt;= 0),
 	id_modelo INTEGER NOT NULL,
 	id_cor INTEGER NOT NULL,
 	id_tipo_propulsao INTEGER NOT NULL,
@@ -150,12 +173,12 @@ CREATE TABLE public.veiculo (
 
 CREATE TABLE public.locacao (
 	id_locacao SERIAL NOT NULL,
-	quilometragem_inicial INTEGER NOT NULL,
-	quilometragem_final INTEGER,
+	quilometragem_inicial INTEGER NOT NULL CHECK (quilometragem_inicial &gt;= 0),
+	quilometragem_final INTEGER CHECK (quilometragem_final &gt;= quilometragem_inicial),
 	data_hora_retirada TIMESTAMP NOT NULL,
 	data_hora_devolucao_prevista TIMESTAMP NOT NULL,
 	data_hora_devolucao_efetiva TIMESTAMP,
-	valor_operacao NUMERIC(10,2),
+	valor_operacao NUMERIC(10,2) CHECK (valor_operacao &gt;= 0),
 	id_cliente INTEGER NOT NULL,
 	placa_veiculo VARCHAR(7) NOT NULL,
 	id_vendedor INTEGER NOT NULL,
@@ -163,6 +186,9 @@ CREATE TABLE public.locacao (
 	CONSTRAINT locacao_pkey PRIMARY KEY (id_locacao)
 );
 
+-- =========================================================
+-- 3. CHAVES ESTRANGEIRAS (CHAVES DE LIGAÇÃO)
+-- =========================================================
 ALTER TABLE public.pessoa ADD CONSTRAINT fk_pessoa_cidade FOREIGN KEY (id_cidade) REFERENCES public.cidade (id_cidade);
 ALTER TABLE public.individuo ADD CONSTRAINT fk_individuo_pessoa FOREIGN KEY (id_pessoa) REFERENCES public.pessoa (id_pessoa);
 ALTER TABLE public.organizacao ADD CONSTRAINT fk_org_pessoa FOREIGN KEY (id_pessoa) REFERENCES public.pessoa (id_pessoa);
